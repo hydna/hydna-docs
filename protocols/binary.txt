@@ -209,7 +209,11 @@ OPEN_RESPONSE  (0x1)
   FLAG MEANING
   ==== =======
   0x0  SUCCESS
-  0x1  ERROR OPENING STREAM
+  0x1  UNKNOWN REASON
+  0x2  STREAM IS NOT AVAILABLE
+  0x3  PROTOCOL IS NOT ALLOWED
+  0x4  UNAUTHORIZED
+  0xF  OTHER (An optional message is within the CONTENT SPACE)
 
   HEADER: 0x0012 0x00 0x00112233 0x1 0x3
            ^      ^    ^          ^   ^   
