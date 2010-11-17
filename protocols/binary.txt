@@ -102,12 +102,12 @@ The `CONTENT SPACE` can be used to attach a `token` to the open request.
 
 The flag nibble is used to determine the mode in which to open the stream:
 
-  FLAG MEANING
-  ==== =======
-  0x0  LISTEN
-  0x1  READ
-  0x2  WRITE
-  0x4  EMIT
+  FLAG TERM   MEANING
+  ==== ====== =======
+  0x0  LISTEN Stream will receive signals
+  0x1  READ   Stream will receive data
+  0x2  WRITE  Stream should be writable
+  0x4  EMIT   Can send signals
 
 Flags can be combined by means of addition resulting in the following
 additional flags that carry multiple values:
@@ -273,16 +273,16 @@ SIGNAL (0x4)
 END (0xf)
 ^^^^^^^^^
 
-  FLAG MEANING
-  ==== =======
+  FLAG TERM        MEANING
+  ==== =========== =======
   0x0  UNKOWN
-  0x1  BADFORMAT
-  0x2  MULTIPLEACK
-  0x3  INVALIDOP
-  0x4  OPFLAG
-  0x5  STREAMOPEN
-  0x6  NOTWRITABLE
-  0x7  STREAMNA
+  0x1  BADFORMAT   Bad packet format
+  0x2  MULTIPLEACK 
+  0x3  INVALIDOP   Invalid operator
+  0x4  OPFLAG 
+  0x5  STREAMOPEN  Stream already open
+  0x6  NOTWRITABLE Trying to write to stream that is not writable
+  0x7  STREAMNA    Stream does not exist
   0x8  *unused*
   0x9  *unused*
   0xa  *unused*
@@ -290,7 +290,7 @@ END (0xf)
   0xc  *unused*
   0xd  *unused*
   0xe  *unused*
-  0xf  OTHER
+  0xf  OTHER       Custom error
 
   HEADER: 0x0020 0x00 0x00112233 0x4 0x4
            ^      ^    ^          ^   ^   
