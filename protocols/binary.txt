@@ -213,6 +213,16 @@ OPEN_RESPONSE  (0x1)
   0x2  STREAM IS NOT AVAILABLE
   0x3  PROTOCOL IS NOT ALLOWED
   0x4  UNAUTHORIZED
+  0x5  *unused*
+  0x6  *unused*
+  0x7  *unused*
+  0x8  *unused*
+  0x9  *unused*
+  0xa  *unused*
+  0xb  *unused*
+  0xc  *unused*
+  0xd  *unused*
+  0xe  *unused*
   0xF  OTHER (An optional message is within the CONTENT SPACE)
 
   HEADER: 0x0012 0x00 0x00112233 0x1 0x3
@@ -294,7 +304,7 @@ END (0xf)
   0xc  *unused*
   0xd  *unused*
   0xe  *unused*
-  0xf  OTHER       Custom error
+  0xf  OTHER       OTHER (An optional message is within the CONTENT SPACE)
 
   HEADER: 0x0020 0x00 0x00112233 0x4 0x4
            ^      ^    ^          ^   ^   
