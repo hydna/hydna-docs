@@ -1,0 +1,309 @@
+Introduction
+============
+
+The Hydna Protocol is a TCP/IP-based, application layer procotol designed
+to facilitate high performance one-to-many real time communication. It is
+an asynchronous protocol, albeit a few internal operations rely on
+chat-style communication.
+
+It is a very terse, multicasting, binary protocol that is well-suited for
+rapidly sending large amounts of small packets.
+
+Terminology
+-----------
+
+* When you encounter the term *byte* we mean an *octet* (8 bits). Both
+  terms may be used interchangeably throughtout this document.
+
+* When you encounter the term *nibble* we mean half an *octet* (4 bits).
+
+* A _nulled_ entity means an entity in which all bits have been set to `0`
+  (the entity has zero magnitude).
+
+* In long sequences of bits (such as addresses) we often omitt bits for
+  reasons of brevity. This is indicated by a trailing ellipsis (...).
+
+* Packing two nibbles in a byte::
+  byte = OP_CODE << 4 | FLAG
+
+* Unpacking a byte into two nibbles::
+  (OP_CODE, FLAG) = (byte >> 4, byte & 0b1111)
+
+The Anatomy of a Hydna Packet
+=============================
+
+Each Hydna Packet consists of a header and a payload (the content).
+
+  +--------------+-----------+------------+------------+------------+
+  | TOTAL LENGTH | RESERVED  |   ADDRESS  |  OP CODE   |    FLAG    |
+  |  (2 octets)  | (1 octet) | (4 octets) | (1 nibble) | (1 nibble) |
+  +--------------+-----------+------------+------------+------------+
+  |                           CONTENT SPACE                         |
+  |                        (0 - 10 240 octets)                      |
+  +-----------------------------------------------------------------+
+
+Header
+------
+
+NOTE: All date is assumed to be in *big endian* form.
+
+The header describes the packet's destination and how the content should be
+interpreted when introspected. The header spans 8 octets in total
+(`TOTAL LENGTH(2) + RESERVED(1) DESTINATION(4) + OP CODE(0.5) + FLAG(0.5)`).
+
+Header Fields
+~~~~~~~~~~~~~
+
+* `TOTAL LENGTH` - The total size of the packet (including the header
+  itself) in octets (`HEADER + CONTENT SPACE`).
+
+* `RESERVED` - Reserved for future use.
+
+* `OP CODE` - A code describing how the packet should be interpreted. See
+  "Op Codes" below.
+
+* `FLAG` - An op code specific flag that is used to send special directives
+  related to said op code (priorities for example).
+
+Address Space
+~~~~~~~~~~~~~
+
+An address consists of 4 octets. The `ADDRESS SPACE` should be "nulled" if it
+is not required by an operation.
+
+Content Space / Payload
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The content is the actual content being transmitted with the packet,
+starting at an offset of 8 (the header size) octets.
+
+The content size is determined by subtracting the header size from the
+total size declared in the first field of the header
+(`TOTAL LENGTH - HEADER LENGTH`). The maximum size of the content
+transmitted is soft-capped at 10240 bytes; packets with a `TOTAL LENGTH`
+field indicating a message larger than `HEADER LENGTH + 10240` will be
+automatically dropped.
+
+Op codes (OP CODE) sent by clients
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SIGNAL OP CODE ACCEPTED FLAGS OCTET REPR
+====== ======= ============== ==========
+OPEN   0x1     0x1-0x7        1x31-1x37
+CLOSE  0x2     0x0            0x20
+EMIT   0x3     0x1-0x3        0x31-0x33
+SIGNAL 0x4     0x0-0xf        0x40-0x4f
+
+OPEN (0x1)
+^^^^^^^^^^
+
+Attempts to open a connection to a stream in read-, write- or read-write mode.
+The `CONTENT SPACE` can be used to attach a `token` to the open request.
+
+The flag nibble is used to determine the mode in which to open the stream:
+
+  FLAG MEANING
+  ==== =======
+  0x1  READ
+  0x2  WRITE
+  0x4  SENDSIGNAL
+
+Flags can be combined by means of addition resulting in the following
+additional flags that carry multiple values:
+
+  FLAG MEANING
+  ==== =======
+  0x3  READ, WRITE (0x1 + 0x2)
+  0x5  READ, SENDSIGNAL (0x1 + 0x4)
+  0x6  WRITE, SENDSIGNAL (0x2 + 0x4)
+  0x7  READ, WRITE, SENDSIGNAL (0x1 + 0x2 + 0x4)
+
+Example:
+
+  HEADER: 0x0008 0x0000 0x00112233 0x1 0x1
+           ^      ^      ^          ^   ^   
+           |      |      |          |   |
+           |      |      |          |   |
+           |      |      |          |   +- FLAG: 0x1, READ
+           |      |      |          |
+           |      |      |          +- OP CODE 0x01, OPEN
+           |      |      |
+           |      |      +- ADDRESS (8 octets) Address of stream to open
+           |      |     
+           |      +- RESERVED (unused in example)
+           |
+           +- TOTAL LENGTH: 8 octets
+  
+  CONTENT SPACE: An optional token (empty in example)
+
+CLOSE (0x2)
+^^^^^^^^^^^
+
+  HEADER: 0x0008 0x0000 0x00112233 0x2 0x0
+           ^      ^      ^          ^   ^   
+           |      |      |          |   |
+           |      |      |          |   |
+           |      |      |          |   +- FLAG: 0x0
+           |      |      |          |
+           |      |      |          +- OP CODE 0x02, CLOSE
+           |      |      |
+           |      |      +- ADDRESS (8 octets) Address of stream to close
+           |      |     
+           |      +- RESERVED (unused in example)
+           |
+           +- TOTAL LENGTH: 8 octets
+  
+
+EMIT (0x3)
+^^^^^^^^^^^
+
+  HEADER: 0x0020 0x0000 0x00112233 0x1 0x0
+           ^      ^      ^          ^   ^   
+           |      |      |          |   |
+           |      |      |          |   |
+           |      |      |          |   +- FLAG: 0x1 Priority
+           |      |      |          |
+           |      |      |          +- OP CODE 0x03, EMIT
+           |      |      |
+           |      |      +- ADDRESS (8 octets) Address of stream to send to
+           |      |     
+           |      +- RESERVED (unused in example)
+           |
+           +- TOTAL LENGTH: 20 octets
+
+  CONTENT SPACE: Data to send ("Hello World!" in example)
+
+SIGNAL (0x4)
+^^^^^^^^^^^^
+
+  HEADER: 0x0020 0x0000 0x00112233 0x4 0x4
+           ^      ^      ^          ^   ^   
+           |      |      |          |   |
+           |      |      |          |   |
+           |      |      |          |   +- FLAG: 0x4 Custom signal
+           |      |      |          |
+           |      |      |          +- OP CODE 0x04, SIGNAL
+           |      |      |
+           |      |      +- ADDRESS (8 octets) Address of stream to send to
+           |      |     
+           |      +- RESERVED (unused in example)
+           |
+           +- TOTAL LENGTH: 8 octets
+
+  CONTENT SPACE: Data to accompanu signal ("Hello World!" in example)
+
+Op codes (OP CODE) received by clients
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SIGNAL        OP CODE ACCEPTED FLAGS OCTET REPR
+======        ======= ============== ==========
+OPEN_RESPONSE 0x1     0x1-0x7        0x11-0x17
+EMIT          0x3     0x1-0x3        0x31-0x33
+SIGNAL        0x4     0x0-0xf        0x40-0x4f
+END           0xf     0x0-0xf        0xf0-0xff
+
+OPEN_RESPONSE  (0x1)
+^^^^^^^^^^^^^^^^^^^^
+
+  FLAG MEANING
+  ==== =======
+  0x0  SUCCESS
+  0x1  ERROR OPENING STREAM
+
+  HEADER: 0x0012 0x00 0x00112233 0x1 0x3
+           ^      ^    ^          ^   ^   
+           |      |    |          |   |
+           |      |    |          |   |
+           |      |    |          |   +- FLAG: 0x0 SUCCESS
+           |      |    |          |
+           |      |    |          +- OP CODE 0x01, OPEN_RESPONSE
+           |      |    |
+           |      |    +- ADDRESS (4 octets) Address as was sent in the
+           |      |       open request
+           |      |   
+           |      +- RESERVED (1 octet, unused in example)
+           |
+           +- TOTAL LENGTH: 12 octets
+
+  CONTENT SPACE: Actual address (4 octets) or error code
+
+
+DATA (0x3)
+^^^^^^^^^^
+
+  HEADER: 0x0020 0x00 0x00112233 0x3 0x3
+           ^      ^    ^          ^   ^   
+           |      |    |          |   |
+           |      |    |          |   |
+           |      |    |          |   +- FLAG: 0x3, Priority
+           |      |    |          |
+           |      |    |          +- OP CODE 0x03, DATA
+           |      |    |
+           |      |    +- ADDRESS (8 octets) Address of stream that data was
+           |      |       sent to.
+           |      |   
+           |      +- RESERVED (1 octet, unused in example)
+           |
+           +- TOTAL LENGTH: 20 octets
+
+  CONTENT SPACE: Data that was sent ("Hello World!" in example)
+
+
+SIGNAL (0x4)
+^^^^^^^^^^^^
+
+  HEADER: 0x0020 0x00 0x00112233 0x4 0x4
+           ^      ^    ^          ^   ^   
+           |      |    |          |   |
+           |      |    |          |   |
+           |      |    |          |   +- FLAG: 0x4 Custom signal
+           |      |    |          |
+           |      |    |          +- OP CODE 0x04, SIGNAL
+           |      |    |
+           |      |    +- ADDRESS (8 octets) Address of stream to send to
+           |      |   
+           |      +- RESERVED (unused in example)
+           |
+           +- TOTAL LENGTH: 20 octets
+
+  CONTENT SPACE: Optional message ("Hello World!" in example)
+
+
+END (0xf)
+^^^^^^^^^
+
+  FLAG MEANING
+  ==== =======
+  0x0  UNKOWN
+  0x1  BADFORMAT
+  0x2  MULTIPLEACK
+  0x3  INVALIDOP
+  0x4  OPFLAG
+  0x5  STREAMOPEN
+  0x6  NOTWRITABLE
+  0x7  STREAMNA
+  0x8  *unused*
+  0x9  *unused*
+  0xa  *unused*
+  0xb  *unused*
+  0xc  *unused*
+  0xd  *unused*
+  0xe  *unused*
+  0xf  OTHER
+
+  HEADER: 0x0020 0x00 0x00112233 0x4 0x4
+           ^      ^    ^          ^   ^   
+           |      |    |          |   |
+           |      |    |          |   |
+           |      |    |          |   +- FLAG: 0x4 End code
+           |      |    |          |
+           |      |    |          +- OP CODE 0x04, SIGNAL
+           |      |    |
+           |      |    +- ADDRESS (8 octets) Address of stream to send to
+           |      |   
+           |      +- RESERVED (unused in example)
+           |
+           +- TOTAL LENGTH: 8 octets
+
+  CONTENT SPACE: Optional message (Empty in example)
+
