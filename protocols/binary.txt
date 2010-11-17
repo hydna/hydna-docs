@@ -91,7 +91,7 @@ SIGNAL OP CODE ACCEPTED FLAGS OCTET REPR
 ====== ======= ============== ==========
 OPEN   0x1     0x1-0x7        1x31-1x37
 CLOSE  0x2     0x0            0x20
-EMIT   0x3     0x1-0x3        0x31-0x33
+DATA   0x3     0x1-0x3        0x31-0x33
 SIGNAL 0x4     0x0-0xf        0x40-0x4f
 
 OPEN (0x1)
@@ -104,19 +104,20 @@ The flag nibble is used to determine the mode in which to open the stream:
 
   FLAG MEANING
   ==== =======
+  0x0  LISTEN
   0x1  READ
   0x2  WRITE
-  0x4  SENDSIGNAL
+  0x4  EMIT
 
 Flags can be combined by means of addition resulting in the following
 additional flags that carry multiple values:
 
   FLAG MEANING
   ==== =======
-  0x3  READ, WRITE (0x1 + 0x2)
-  0x5  READ, SENDSIGNAL (0x1 + 0x4)
-  0x6  WRITE, SENDSIGNAL (0x2 + 0x4)
-  0x7  READ, WRITE, SENDSIGNAL (0x1 + 0x2 + 0x4)
+  0x3  LISTEN, READ, WRITE (0x0 + 0x1 + 0x2)
+  0x5  LISTEN, READ, EMIT (0x0 + 0x1 + 0x4)
+  0x6  LISTEN, WRITE, EMIT (0x0 + 0x2 + 0x4)
+  0x7  LISTEN, READ, WRITE, EMIT (0x0 + 0x1 + 0x2 + 0x4)
 
 Example:
 
@@ -154,7 +155,7 @@ CLOSE (0x2)
            +- TOTAL LENGTH: 8 octets
   
 
-EMIT (0x3)
+DATA (0x3)
 ^^^^^^^^^^^
 
   HEADER: 0x0020 0x0000 0x00112233 0x1 0x0
@@ -163,7 +164,7 @@ EMIT (0x3)
            |      |      |          |   |
            |      |      |          |   +- FLAG: 0x1 Priority
            |      |      |          |
-           |      |      |          +- OP CODE 0x03, EMIT
+           |      |      |          +- OP CODE 0x03, DATA
            |      |      |
            |      |      +- ADDRESS (8 octets) Address of stream to send to
            |      |     
