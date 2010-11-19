@@ -84,6 +84,65 @@ transmitted is soft-capped at 10240 bytes; packets with a `TOTAL LENGTH`
 field indicating a message larger than `HEADER LENGTH + 10240` will be
 automatically dropped.
 
+Communication
+=============
+
+Handshake
+---------
+
+In order to start communicating a small handshake must take place.
+
+*NOTE* data sent and received in the handshake is encoded as 8-bit ASCII. The
+`\x` prefix denotes the expansion of the hexadecimal value that follows.
+
+Example:
+
+    \x40 == ASCII characer 64 == '@'
+
+The purpose of this handshake is to [COMING SOON].
+
+Before any actual communication takes place the client must send a packet in
+the format:
+
+    |PREFIX|ADDR|
+
+Where `PREFIX` is a 5-byte-prefix corresponding to the text "DNA10" in ASCII
+table ("\x44\x4E\x41\x31\x30"), and `ADDR` is the hex-version of the 32-bit
+zone id (also to be encoded as ASCII).
+
+Example request:
+    
+    \x44\x4E\x41\x31\x30\x00\x00\x00\x01
+
+    In ASCII (the pipes added for the sake of added readability -- they are
+    not part of the actual data sent):
+      |DNA10|00000001|
+
+The server will, in turn, respond with a packet in the format:
+
+    |PREFIX|CODE|
+
+The prefix should match the one sent by the client. `CODE` is one of the
+following:
+
+    CODE MEANING
+    ==== =======
+    \x30 Success
+    \x31 unknown
+    \x32 Bad format
+    \x33 Server Busy
+    \x34 Invalid Zone
+
+Example response:
+
+    \x44\x4E\x41\x31\x30
+
+    In ASCII:
+      |DNA10|0|
+
+Regular communication
+---------------------
+
 Op codes (OP CODE) sent by clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -97,10 +156,10 @@ SIGNAL 0x4     0x0-0xf        0x40-0x4f
 OPEN (0x1)
 ^^^^^^^^^^
 
-Attempts to open a connection to a stream in read-, write- or read-write mode.
+Attempts to open a connection to a stream in a specific `mode`.
 The `CONTENT SPACE` can be used to attach a `token` to the open request.
 
-The flag nibble is used to determine the mode in which to open the stream:
+The flag-nibble is used to determine the mode in which to open the stream:
 
   FLAG TERM   MEANING
   ==== ====== =======
@@ -127,7 +186,7 @@ Example:
            |      |      |          |   |
            |      |      |          |   +- FLAG: 0x1, READ
            |      |      |          |
-           |      |      |          +- OP CODE 0x01, OPEN
+           |      |      |          +- OP CODE 0x1, OPEN
            |      |      |
            |      |      +- ADDRESS (8 octets) Address of stream to open
            |      |     
@@ -140,13 +199,17 @@ Example:
 CLOSE (0x2)
 ^^^^^^^^^^^
 
+A packet sent indicating that the stream open to `ADDRESS` should be closed.
+No further packets adressed to `ADDRESS` will be received and sending packets
+with the destination will result in an error.
+
   HEADER: 0x0008 0x0000 0x00112233 0x2 0x0
            ^      ^      ^          ^   ^   
            |      |      |          |   |
            |      |      |          |   |
            |      |      |          |   +- FLAG: 0x0
            |      |      |          |
-           |      |      |          +- OP CODE 0x02, CLOSE
+           |      |      |          +- OP CODE 0x2, CLOSE
            |      |      |
            |      |      +- ADDRESS (8 octets) Address of stream to close
            |      |     
@@ -158,11 +221,16 @@ CLOSE (0x2)
 DATA (0x3)
 ^^^^^^^^^^^
 
-  HEADER: 0x0020 0x0000 0x00112233 0x1 0x0
+Send the payload in `CONTENT SPACE` to `ADDRESS`. The flag-bit indicates
+priority of the message.
+
+Valid priority levels: 0x1, 0x2, 0x3
+
+  HEADER: 0x0020 0x0000 0x00112233 0x1 0x1
            ^      ^      ^          ^   ^   
            |      |      |          |   |
            |      |      |          |   |
-           |      |      |          |   +- FLAG: 0x1 Priority
+           |      |      |          |   +- FLAG: 0x1, Priority 1
            |      |      |          |
            |      |      |          +- OP CODE 0x03, DATA
            |      |      |
@@ -177,13 +245,17 @@ DATA (0x3)
 SIGNAL (0x4)
 ^^^^^^^^^^^^
 
+Send a signal to the specified `ADDRESS`. All signals are identified by their
+code sent in the flab-nibble. All signals are defined by the "user" and can
+be in the range 0x0-0xF.
+
   HEADER: 0x0020 0x0000 0x00112233 0x4 0x4
            ^      ^      ^          ^   ^   
            |      |      |          |   |
            |      |      |          |   |
            |      |      |          |   +- FLAG: 0x4 Custom signal
            |      |      |          |
-           |      |      |          +- OP CODE 0x04, SIGNAL
+           |      |      |          +- OP CODE 0x4, SIGNAL
            |      |      |
            |      |      +- ADDRESS (8 octets) Address of stream to send to
            |      |     
@@ -196,15 +268,28 @@ SIGNAL (0x4)
 Op codes (OP CODE) received by clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SIGNAL        OP CODE ACCEPTED FLAGS OCTET REPR
-======        ======= ============== ==========
-OPEN_RESPONSE 0x1     0x1-0x7        0x11-0x17
-EMIT          0x3     0x1-0x3        0x31-0x33
-SIGNAL        0x4     0x0-0xf        0x40-0x4f
-END           0xf     0x0-0xf        0xf0-0xff
+SIGNAL    OP CODE ACCEPTED FLAGS OCTET REPR
+======    ======= ============== ==========
+OPENRESP  0x1     0x1-0x7        0x11-0x17
+EMIT      0x3     0x1-0x3        0x31-0x33
+SIGNAL    0x4     0x0-0xf        0x40-0x4f
+END       0xf     0x0-0xf        0xf0-0xff
 
-OPEN_RESPONSE  (0x1)
-^^^^^^^^^^^^^^^^^^^^
+OPENRESP  (0x1)
+^^^^^^^^^^^^^^^
+
+An `OPEN`-request by the client is always followed by an `OPENRESP`-response
+from the server. The packet contains the address opened in `ADDRESS`, the
+type of response in the `FLAG` and the final address of the stream from which
+packets will be received in the `CONTENT SPACE`.
+
+A client might send a request to open the address '00112233'. The server might
+respond with the address '11223344' in the `CONTENT SPACE`. The latter is the
+actual address the client should be listening for packets on.
+
+This behaviour is useful when the administrator needs to assign addresses
+to clients that do not know what address they should request (think DHCP or
+DNS lookup).
 
   FLAG MEANING
   ==== =======
@@ -217,7 +302,7 @@ OPEN_RESPONSE  (0x1)
            |      |    |          |   |
            |      |    |          |   +- FLAG: 0x0 SUCCESS
            |      |    |          |
-           |      |    |          +- OP CODE 0x01, OPEN_RESPONSE
+           |      |    |          +- OP CODE 0x1, OPEN_RESPONSE
            |      |    |
            |      |    +- ADDRESS (4 octets) Address as was sent in the
            |      |       open request
@@ -231,6 +316,8 @@ OPEN_RESPONSE  (0x1)
 
 DATA (0x3)
 ^^^^^^^^^^
+
+Data received (see `SIGNAL` in the section `Op codes sent by clients`).
 
   HEADER: 0x0020 0x00 0x00112233 0x3 0x3
            ^      ^    ^          ^   ^   
@@ -253,6 +340,8 @@ DATA (0x3)
 SIGNAL (0x4)
 ^^^^^^^^^^^^
 
+Signal received (see `SIGNAL` in the section `Op codes sent by clients`).
+
   HEADER: 0x0020 0x00 0x00112233 0x4 0x4
            ^      ^    ^          ^   ^   
            |      |    |          |   |
@@ -272,6 +361,10 @@ SIGNAL (0x4)
 
 END (0xf)
 ^^^^^^^^^
+
+Packet sent by the server when a stream has been closed.
+
+The flag is used to convey an error-code translated as follows:
 
   FLAG TERM        MEANING
   ==== =========== =======
