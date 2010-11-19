@@ -291,10 +291,24 @@ This behaviour is useful when the administrator needs to assign addresses
 to clients that do not know what address they should request (think DHCP or
 DNS lookup).
 
-  FLAG MEANING
-  ==== =======
-  0x0  SUCCESS
-  0x1  ERROR OPENING STREAM
+  FLAG TERM         MEANING
+  ==== ============ =======
+  0x0  SUCCESS      The open request was successful. Response address in CS.
+  0x1  UNKNOWN      Unknown reason why open request was denied. 
+  0x2  STREAMNA     Stream is not available.
+  0x3  PROTOCOL     Protocol is not allowed.
+  0x4  UNAUTHORIZED The request was not authorized to be opened.
+  0x5  *unused*
+  0x6  *unused*
+  0x7  *unused*
+  0x8  *unused*
+  0x9  *unused*
+  0xa  *unused*
+  0xb  *unused*
+  0xc  *unused*
+  0xd  *unused*
+  0xe  *unused*
+  0xF  OTHER (An optional message is within the CONTENT SPACE)
 
   HEADER: 0x0012 0x00 0x00112233 0x1 0x3
            ^      ^    ^          ^   ^   
@@ -383,7 +397,7 @@ The flag is used to convey an error-code translated as follows:
   0xc  *unused*
   0xd  *unused*
   0xe  *unused*
-  0xf  OTHER       Custom error
+  0xf  OTHER       OTHER (An optional message is within the CONTENT SPACE)
 
   HEADER: 0x0020 0x00 0x00112233 0x4 0x4
            ^      ^    ^          ^   ^   
