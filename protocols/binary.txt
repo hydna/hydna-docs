@@ -97,7 +97,7 @@ In order to start communicating a small handshake must take place.
 
 Example:
 
-    \x40 == ASCII characer 64 == '@'
+    \x40 == characer 64 in the ASCII table == '@'
 
 The purpose of this handshake is to [COMING SOON].
 
