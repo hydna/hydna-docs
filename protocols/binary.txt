@@ -121,21 +121,21 @@ The server will, in turn, respond with a packet in the format:
 The prefix should match the one sent by the client. `CODE` is one of the
 following:
 
-    CODE MEANING
-    ==== =======
-    0x00 Success
-    0x01 Unknown Error
-    0x02 Server Busy
-    0x03 Bad Format
-    0x04 Invalid Zone
+  CODE TERM        MEANING
+  ==== ====        =======
+  0x00 SUCCESS     Success
+  0x01 UNKNOWN     Unknown Error
+  0x02 SERVER_BUSY Server Busy
+  0x03 BAD_FORMAT  Bad Format
+  0x04 ZONE        Invalid Zone
 
 Example response:
 
-    0x444E4131 0x00
-     ^          ^      
-     |          +- CODE (1 octet) Indicates a successful handshake
-     |
-     +- PREFIX
+  0x444E4131 0x00
+   ^          ^      
+   |          +- CODE (1 octet) Indicates a successful handshake
+   |
+   +- PREFIX
 
 
 Regular Communication
@@ -144,11 +144,11 @@ Regular Communication
 Op codes (OP CODE) sent by clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SIGNAL OP CODE ACCEPTED FLAGS OCTET REPR
-====== ======= ============== ==========
-OPEN   0x1     0x1-0x7        1x30-1x37
-DATA   0x3     0x1-0x3        0x31-0x33
-SIGNAL 0x4     0x0-0xf        0x40-0x4f
+  SIGNAL OP CODE ACCEPTED FLAGS OCTET REPR
+  ====== ======= ============== ==========
+  OPEN   0x1     0x1-0x7        1x30-1x37
+  DATA   0x3     0x1-0x3        0x31-0x33
+  SIGNAL 0x4     0x0-0xf        0x40-0x4f
 
 OPEN (0x1)
 ^^^^^^^^^^
