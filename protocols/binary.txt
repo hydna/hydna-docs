@@ -141,6 +141,10 @@ Example response:
 Regular Communication
 ---------------------
 
+There are three op codes in use in the current implementation (`OPEN`, `DATA`
+and `SIGNAL`). The same op codes are used in both directions, but are treated
+differently depending on if they are received or sent.
+
 Op codes (OP CODE) sent by clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -148,7 +152,7 @@ Op codes (OP CODE) sent by clients
   ====== ======= ============== ==========
   OPEN   0x1     0x1-0x7        1x30-1x37
   DATA   0x3     0x1-0x3        0x31-0x33
-  SIGNAL 0x4     0x0-0xf        0x40-0x4f
+  SIGNAL 0x4     0x0-0x1        0x40-0x41
 
 OPEN (0x1)
 ^^^^^^^^^^
@@ -180,7 +184,6 @@ Example:
   HEADER: 0x0008 0x0000 0x00112233 0x1 0x1
            ^      ^      ^          ^   ^   
            |      |      |          |   |
-           |      |      |          |   |
            |      |      |          |   +- FLAG: 0x1, READ
            |      |      |          |
            |      |      |          +- OP CODE 0x1, OPEN
@@ -205,7 +208,6 @@ Valid priority levels: 0x1, 0x2, 0x3
   HEADER: 0x0020 0x0000 0x00112233 0x1 0x1
            ^      ^      ^          ^   ^   
            |      |      |          |   |
-           |      |      |          |   |
            |      |      |          |   +- FLAG: 0x1, Priority 1
            |      |      |          |
            |      |      |          +- OP CODE 0x03, DATA
@@ -222,14 +224,22 @@ SIGNAL (0x4)
 ^^^^^^^^^^^^
 
 Send a signal to the specified `ADDRESS`. All signals are identified by their
-code sent in the flab-nibble. All signals are defined by the "user" and can
-be in the range 0x0-0xF.
+code sent in the flab-nibble. Clients can send signals in the range 0x00-0x01.
 
-  HEADER: 0x0020 0x0000 0x00112233 0x4 0x4
+   FLAG TERM   MEANING
+   ==== ====== =======
+   0x0  EMIT   Emit a custom signal
+ * 0x1  END    Close stream
+
+When the server receives a signal with the `END`-flag, the stream will be
+closed and must be re-opened before further actions can be performed.
+
+Additional information can be sent in the payload.
+
+  HEADER: 0x0020 0x0000 0x00112233 0x4 0x1
            ^      ^      ^          ^   ^   
            |      |      |          |   |
-           |      |      |          |   |
-           |      |      |          |   +- FLAG: 0x4 Custom signal
+           |      |      |          |   +- FLAG: 0x1 Custom signal
            |      |      |          |
            |      |      |          +- OP CODE 0x4, SIGNAL
            |      |      |
@@ -239,7 +249,7 @@ be in the range 0x0-0xF.
            |
            +- TOTAL LENGTH: 8 octets
 
-  CONTENT SPACE: Data to accompanu signal ("Hello World!" in example)
+  CONTENT SPACE: Data to accompany signal ("Hello World!" in example)
 
 Op codes (OP CODE) received by clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -266,24 +276,26 @@ This behaviour is useful when the administrator needs to assign addresses
 to clients that do not know what address they should request (think DHCP or
 DNS lookup).
 
-  FLAG TERM         MEANING
-  ==== ============ =======
-  0x0  SUCCESS      The open request was successful. Response address in CS.
-  0x1  UNKNOWN      Unknown reason why open request was denied. 
-  0x2  STREAMNA     Stream is not available.
-  0x3  PROTOCOL     Protocol is not allowed.
-  0x4  UNAUTHORIZED The request was not authorized to be opened.
-  0x5  *unused*
-  0x6  *unused*
-  0x7  *unused*
-  0x8  *unused*
-  0x9  *unused*
-  0xa  *unused*
-  0xb  *unused*
-  0xc  *unused*
-  0xd  *unused*
-  0xe  *unused*
-  0xF  OTHER (An optional message is within the CONTENT SPACE)
+    FLAG TERM              MEANING
+    ==== ============      =======
+    0x0  SUCCESS           The open request was successful.
+    0x1  REDIRECT          Redirected to a new address, new address in payload.
+    0x2  *unused*
+    0x3  *unused*
+    0x4  *unused*
+    0x5  *unused*
+    0x6  *unused*
+    0x6  *unused*
+  * 0x8  FAIL_NA           Stream is not available
+  * 0x9  FAIL_MODE         Mode not allowed
+  * 0xa  FAIL_PROTOCOL     Protocol not allowed
+  * 0xb  FAIL_HOST         Hostname not allowed
+  * 0xc  FAIL_AUTH         Authentication failure
+  * 0xd  FAIL_SERVICE_NA   Service not available
+  * 0xe  FAIL_SERVICE_ERR  Service error
+  * 0xf  FAIL_OTHER        Other error
+
+Responses marked with an asterisk (*) denote that the stream was NOT opened.
 
   HEADER: 0x0012 0x00 0x00112233 0x1 0x3
            ^      ^    ^          ^   ^   
@@ -331,62 +343,38 @@ SIGNAL (0x4)
 
 Signal received (see `SIGNAL` in the section `Op codes sent by clients`).
 
+The following flags can be sent by the server:
+
+    FLAG TERM           MEANING
+    ==== ======         =======
+    0x0  EMIT           Emit a custom signal
+  * 0x1  END            Close stream
+    0x5  N/A             *unused*
+    0x6  N/A             *unused*
+    0x7  N/A             *unused*
+    0x8  N/A             *unused*
+    0x9  N/A             *unused*
+  * 0xa  ERR_PROTOCOL   Client sent ill-formatted data
+  * 0xb  ERR_OPERATION  Operation Error
+  * 0xc  ERR_LIMIT      Limit reached (messages/second, message size etc)
+  * 0xd  ERR_SERVER     Internal server error
+  * 0xe  ERR_VIOLATION  A violation has occurred
+  * 0xf  ERR_OTHER      Other error
+
+When a flag marked with an asterisk (*) in the table above is received, the
+target stream will be closed. If the address of the packet is nulled, all
+streams on the target zone will be closed and the connection is terminated.
+
   HEADER: 0x0020 0x00 0x00112233 0x4 0x4
            ^      ^    ^          ^   ^   
            |      |    |          |   |
            |      |    |          |   |
-           |      |    |          |   +- FLAG: 0x4 Custom signal
+           |      |    |          |   +- FLAG: 0x1 Custom signal
            |      |    |          |
            |      |    |          +- OP CODE 0x04, SIGNAL
            |      |    |
-           |      |    +- ADDRESS (8 octets) Address of stream to send to
+           |      |    +- ADDRESS (8 octets) Address of stream to close
            |      |   
            |      +- RESERVED (unused in example)
            |
            +- TOTAL LENGTH: 20 octets
-
-  CONTENT SPACE: Optional message ("Hello World!" in example)
-
-
-END (0xf)
-^^^^^^^^^
-
-Packet sent by the server when a stream has been closed.
-
-The flag is used to convey an error-code translated as follows:
-
-  FLAG TERM        MEANING
-  ==== =========== =======
-  0x0  UNKOWN
-  0x1  BADFORMAT   Bad packet format
-  0x2  MULTIPLEACK 
-  0x3  INVALIDOP   Invalid operator
-  0x4  OPFLAG 
-  0x5  STREAMOPEN  Stream already open
-  0x6  NOTWRITABLE Trying to write to stream that is not writable
-  0x7  STREAMNA    Stream does not exist
-  0x8  *unused*
-  0x9  *unused*
-  0xa  *unused*
-  0xb  *unused*
-  0xc  *unused*
-  0xd  *unused*
-  0xe  *unused*
-  0xf  OTHER       OTHER (An optional message is within the CONTENT SPACE)
-
-  HEADER: 0x0020 0x00 0x00112233 0x4 0x4
-           ^      ^    ^          ^   ^   
-           |      |    |          |   |
-           |      |    |          |   |
-           |      |    |          |   +- FLAG: 0x4 End code
-           |      |    |          |
-           |      |    |          +- OP CODE 0x04, SIGNAL
-           |      |    |
-           |      |    +- ADDRESS (8 octets) Address of stream to send to
-           |      |   
-           |      +- RESERVED (unused in example)
-           |
-           +- TOTAL LENGTH: 8 octets
-
-  CONTENT SPACE: Optional message (Empty in example)
-
