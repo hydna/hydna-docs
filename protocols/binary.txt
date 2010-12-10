@@ -300,7 +300,6 @@ Responses marked with an asterisk (*) denote that the stream was NOT opened.
   HEADER: 0x0012 0x00 0x00112233 0x1 0x3
            ^      ^    ^          ^   ^   
            |      |    |          |   |
-           |      |    |          |   |
            |      |    |          |   +- FLAG: 0x0 SUCCESS
            |      |    |          |
            |      |    |          +- OP CODE 0x1, OPEN_RESPONSE
@@ -322,7 +321,6 @@ Data received (see `SIGNAL` in the section `Op codes sent by clients`).
 
   HEADER: 0x0020 0x00 0x00112233 0x3 0x3
            ^      ^    ^          ^   ^   
-           |      |    |          |   |
            |      |    |          |   |
            |      |    |          |   +- FLAG: 0x3, Priority
            |      |    |          |
@@ -367,7 +365,6 @@ streams on the target zone will be closed and the connection is terminated.
 
   HEADER: 0x0020 0x00 0x00112233 0x4 0x4
            ^      ^    ^          ^   ^   
-           |      |    |          |   |
            |      |    |          |   |
            |      |    |          |   +- FLAG: 0x1 Custom signal
            |      |    |          |
