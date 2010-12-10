@@ -90,57 +90,55 @@ Communication
 Handshake
 ---------
 
-In order to start communicating a small handshake must take place.
+A small handshake must take place before communication over the protocal can
+be commenced.
 
-*NOTE* data sent and received in the handshake is encoded as 8-bit ASCII. The
-`\x` prefix denotes the expansion of the hexadecimal value that follows.
+The handshake is initialized by the client by sending a packet in the format:
 
-Example:
+  +--------------+-----------+
+  |    PREFIX    |   ZONE    |
+  |  (4 octets)  | (4 octet) |
+  +--------------+-----------+
 
-    \x40 == characer 64 in the ASCII table == '@'
-
-The purpose of this handshake is to [COMING SOON].
-
-Before any actual communication takes place the client must send a packet in
-the format:
-
-    |PREFIX|ADDR|
-
-Where `PREFIX` is a 5-byte-prefix corresponding to the text "DNA10" in ASCII
-table ("\x44\x4E\x41\x31\x30"), and `ADDR` is the hex-version of the 32-bit
-zone id (also to be encoded as ASCII).
+Where `PREFIX` is a 4-octet-prefix corresponding to the text "DNA1" in the
+ASCII table and `ZONE` is the 32-bit zone identifier.
 
 Example request:
     
-    \x44\x4E\x41\x31\x30\x00\x00\x00\x01
-
-    In ASCII (the pipes added for the sake of added readability -- they are
-    not part of the actual data sent):
-      |DNA10|00000001|
+    0x444E4131 0x00112233
+     ^          ^      
+     |          +- ZONE (8 octets) Identifier for zone
+     |
+     +- PREFIX
 
 The server will, in turn, respond with a packet in the format:
 
-    |PREFIX|CODE|
+  +--------------+-----------+
+  |    PREFIX    |   CODE    |
+  |  (4 octets)  | (1 octet) |
+  +--------------+-----------+
 
 The prefix should match the one sent by the client. `CODE` is one of the
 following:
 
     CODE MEANING
     ==== =======
-    \x30 Success
-    \x31 unknown
-    \x32 Bad format
-    \x33 Server Busy
-    \x34 Invalid Zone
+    0x00 Success
+    0x01 Unknown Error
+    0x02 Server Busy
+    0x03 Bad Format
+    0x04 Invalid Zone
 
 Example response:
 
-    \x44\x4E\x41\x31\x30
+    0x444E4131 0x00
+     ^          ^      
+     |          +- CODE (1 octet) Indicates a successful handshake
+     |
+     +- PREFIX
 
-    In ASCII:
-      |DNA10|0|
 
-Regular communication
+Regular Communication
 ---------------------
 
 Op codes (OP CODE) sent by clients
