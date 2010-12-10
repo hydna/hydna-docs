@@ -154,6 +154,9 @@ Op codes (OP CODE) sent by clients
   DATA   0x3     0x1-0x3        0x31-0x33
   SIGNAL 0x4     0x0-0x1        0x40-0x41
 
+Note: clients may never send nulled addresses to the server. Doing so will
+result in the connection being closed.
+
 OPEN (0x1)
 ^^^^^^^^^^
 
@@ -317,7 +320,7 @@ Responses marked with an asterisk (*) denote that the stream was NOT opened.
 DATA (0x3)
 ^^^^^^^^^^
 
-Data received (see `SIGNAL` in the section `Op codes sent by clients`).
+Data received (see `DATA` in the section `Op codes sent by clients`).
 
   HEADER: 0x0020 0x00 0x00112233 0x3 0x3
            ^      ^    ^          ^   ^   
@@ -360,8 +363,10 @@ The following flags can be sent by the server:
   * 0xf  ERR_OTHER      Other error
 
 When a flag marked with an asterisk (*) in the table above is received, the
-target stream will be closed. If the address of the packet is nulled, all
-streams on the target zone will be closed and the connection is terminated.
+target stream will be closed.
+
+If the address of the packet is nulled, all streams on the target zone will be
+affected by the signal.
 
   HEADER: 0x0020 0x00 0x00112233 0x4 0x4
            ^      ^    ^          ^   ^   
