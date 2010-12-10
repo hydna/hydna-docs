@@ -147,7 +147,6 @@ Op codes (OP CODE) sent by clients
 SIGNAL OP CODE ACCEPTED FLAGS OCTET REPR
 ====== ======= ============== ==========
 OPEN   0x1     0x1-0x7        1x30-1x37
-CLOSE  0x2     0x0            0x20
 DATA   0x3     0x1-0x3        0x31-0x33
 SIGNAL 0x4     0x0-0xf        0x40-0x4f
 
@@ -194,27 +193,6 @@ Example:
   
   CONTENT SPACE: An optional token (empty in example)
 
-CLOSE (0x2)
-^^^^^^^^^^^
-
-A packet sent indicating that the stream open to `ADDRESS` should be closed.
-No further packets adressed to `ADDRESS` will be received and sending packets
-with the destination will result in an error.
-
-  HEADER: 0x0008 0x0000 0x00112233 0x2 0x0
-           ^      ^      ^          ^   ^   
-           |      |      |          |   |
-           |      |      |          |   |
-           |      |      |          |   +- FLAG: 0x0
-           |      |      |          |
-           |      |      |          +- OP CODE 0x2, CLOSE
-           |      |      |
-           |      |      +- ADDRESS (8 octets) Address of stream to close
-           |      |     
-           |      +- RESERVED (unused in example)
-           |
-           +- TOTAL LENGTH: 8 octets
-  
 
 DATA (0x3)
 ^^^^^^^^^^^
@@ -268,13 +246,12 @@ Op codes (OP CODE) received by clients
 
 SIGNAL    OP CODE ACCEPTED FLAGS OCTET REPR
 ======    ======= ============== ==========
-OPENRESP  0x1     0x1-0x7        0x11-0x17
-EMIT      0x3     0x1-0x3        0x31-0x33
+OPEN      0x1     0x1-0x7        0x11-0x17
+DATA      0x3     0x1-0x3        0x31-0x33
 SIGNAL    0x4     0x0-0xf        0x40-0x4f
-END       0xf     0x0-0xf        0xf0-0xff
 
-OPENRESP  (0x1)
-^^^^^^^^^^^^^^^
+OPEN  (0x1)
+^^^^^^^^^^^
 
 An `OPEN`-request by the client is always followed by an `OPENRESP`-response
 from the server. The packet contains the address opened in `ADDRESS`, the
