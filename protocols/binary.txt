@@ -20,7 +20,7 @@ Terminology
 * A _nulled_ entity means an entity in which all bits have been set to `0`
   (the entity has zero magnitude).
 
-* In long sequences of bits (such as addresses) we often omitt bits for
+* In long sequences of bits (such as addresses) we often omit bits for
   reasons of brevity. This is indicated by a trailing ellipsis (...).
 
 * Packing two nibbles in a byte::
