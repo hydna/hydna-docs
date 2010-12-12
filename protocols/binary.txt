@@ -200,7 +200,7 @@ Example:
   CONTENT SPACE: An optional token (empty in example)
 
 
-DATA (0x3)
+DATA (0x2)
 ^^^^^^^^^^^
 
 Send the payload in `CONTENT SPACE` to `ADDRESS`. The flag-bit indicates
@@ -223,7 +223,7 @@ Valid priority levels: 0x1, 0x2, 0x3
 
   CONTENT SPACE: Data to send ("Hello World!" in example)
 
-SIGNAL (0x4)
+SIGNAL (0x3)
 ^^^^^^^^^^^^
 
 Send a signal to the specified `ADDRESS`. All signals are identified by their
@@ -317,7 +317,7 @@ Responses marked with an asterisk (*) denote that the stream was NOT opened.
   CONTENT SPACE: Actual address (4 octets) or error code
 
 
-DATA (0x3)
+DATA (0x2)
 ^^^^^^^^^^
 
 Data received (see `DATA` in the section `Op codes sent by clients`).
@@ -339,7 +339,7 @@ Data received (see `DATA` in the section `Op codes sent by clients`).
   CONTENT SPACE: Data that was sent ("Hello World!" in example)
 
 
-SIGNAL (0x4)
+SIGNAL (0x3)
 ^^^^^^^^^^^^
 
 Signal received (see `SIGNAL` in the section `Op codes sent by clients`).
