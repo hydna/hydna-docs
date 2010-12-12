@@ -266,7 +266,7 @@ SIGNAL    0x3     0x0-0xf        0x30-0x3f
 OPEN  (0x1)
 ^^^^^^^^^^^
 
-An `OPEN`-request by the client is always followed by an `OPENRESP`-response
+An `OPEN`-request by the client is always followed by an `OPEN`-response
 from the server. The packet contains the address opened in `ADDRESS`, the
 type of response in the `FLAG` and the final address of the stream from which
 packets will be received in the `CONTENT SPACE`.
@@ -314,7 +314,7 @@ Responses marked with an asterisk (*) denote that the stream was NOT opened.
            |
            +- TOTAL LENGTH: 12 octets
 
-  CONTENT SPACE: Actual address (4 octets) or error code
+  CONTENT SPACE: Null, actual address (4 octets) in redredicts or error message
 
 
 DATA (0x2)
