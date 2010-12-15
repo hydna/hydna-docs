@@ -150,9 +150,9 @@ Op codes (OP CODE) sent by clients
 
   SIGNAL OP CODE ACCEPTED FLAGS OCTET REPR
   ====== ======= ============== ==========
-  OPEN   0x1     0x1-0x7        1x30-1x37
-  DATA   0x3     0x1-0x3        0x31-0x33
-  SIGNAL 0x4     0x0-0x1        0x40-0x41
+  OPEN   0x1     0x0-0x7        0x10-0x17
+  DATA   0x2     0x1-0x2        0x20-0x22
+  SIGNAL 0x3     0x0-0x1        0x30-0x31
 
 Note: clients may never send nulled addresses to the server. Doing so will
 result in the connection being closed.
@@ -200,7 +200,7 @@ Example:
   CONTENT SPACE: An optional token (empty in example)
 
 
-DATA (0x3)
+DATA (0x2)
 ^^^^^^^^^^^
 
 Send the payload in `CONTENT SPACE` to `ADDRESS`. The flag-bit indicates
@@ -223,7 +223,7 @@ Valid priority levels: 0x1, 0x2, 0x3
 
   CONTENT SPACE: Data to send ("Hello World!" in example)
 
-SIGNAL (0x4)
+SIGNAL (0x3)
 ^^^^^^^^^^^^
 
 Send a signal to the specified `ADDRESS`. All signals are identified by their
@@ -259,14 +259,14 @@ Op codes (OP CODE) received by clients
 
 SIGNAL    OP CODE ACCEPTED FLAGS OCTET REPR
 ======    ======= ============== ==========
-OPEN      0x1     0x1-0x7        0x11-0x17
-DATA      0x3     0x1-0x3        0x31-0x33
-SIGNAL    0x4     0x0-0xf        0x40-0x4f
+OPEN      0x1     0x0-0x7        0x10-0x17
+DATA      0x2     0x0-0x2        0x20-0x22
+SIGNAL    0x3     0x0-0xf        0x30-0x3f
 
 OPEN  (0x1)
 ^^^^^^^^^^^
 
-An `OPEN`-request by the client is always followed by an `OPENRESP`-response
+An `OPEN`-request by the client is always followed by an `OPEN`-response
 from the server. The packet contains the address opened in `ADDRESS`, the
 type of response in the `FLAG` and the final address of the stream from which
 packets will be received in the `CONTENT SPACE`.
@@ -314,10 +314,10 @@ Responses marked with an asterisk (*) denote that the stream was NOT opened.
            |
            +- TOTAL LENGTH: 12 octets
 
-  CONTENT SPACE: Actual address (4 octets) or error code
+  CONTENT SPACE: Null, actual address (4 octets) in redredicts or error message
 
 
-DATA (0x3)
+DATA (0x2)
 ^^^^^^^^^^
 
 Data received (see `DATA` in the section `Op codes sent by clients`).
@@ -339,7 +339,7 @@ Data received (see `DATA` in the section `Op codes sent by clients`).
   CONTENT SPACE: Data that was sent ("Hello World!" in example)
 
 
-SIGNAL (0x4)
+SIGNAL (0x3)
 ^^^^^^^^^^^^
 
 Signal received (see `SIGNAL` in the section `Op codes sent by clients`).
