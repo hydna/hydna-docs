@@ -107,7 +107,7 @@ Example request:
     
     0x444E4131 0x00112233
      ^          ^      
-     |          +- ZONE (8 octets) Identifier for zone
+     |          +- ZONE (4 octets) Identifier for zone
      |
      +- PREFIX
 
