@@ -95,19 +95,22 @@ be commenced.
 
 The handshake is initialized by the client by sending a packet in the format:
 
-  +--------------+-----------+
-  |    PREFIX    |   ZONE    |
-  |  (4 octets)  | (4 octet) |
-  +--------------+-----------+
+  +--------------+-----------+-----------+
+  |    PREFIX    |   LENGTH  |   HOST    |
+  |  (4 octets)  | (1 octet) | (4 octet) |
+  +--------------+-----------+-----------+
 
 Where `PREFIX` is a 4-octet-prefix corresponding to the text "DNA1" in the
-ASCII table and `ZONE` is the 32-bit zone identifier.
+ASCII table, `LENGTH` dictates the length of the `HOST` wich is an ASCII 
+sequence.
 
 Example request:
     
-    0x444E4131 0x00112233
-     ^          ^      
-     |          +- ZONE (4 octets) Identifier for zone
+    0x444E4131 0x0A hello.com
+     ^          ^    ^
+     |          |    +- HOST FQDN of host
+     |          |       
+     |          +- LENGTH (1 octets) 10 characters
      |
      +- PREFIX
 
