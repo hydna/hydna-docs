@@ -6,7 +6,8 @@
 
 ## Host
 
-Fully qualified domain name of remote entity serving intended zone.
+Fully qualified domain name of remote entity serving intended zone. The host
+must not exeed 256 bytes.
 
 ## Port
 
