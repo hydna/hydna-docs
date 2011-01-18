@@ -154,7 +154,7 @@ Op codes (OP CODE) sent by clients
   SIGNAL OP CODE ACCEPTED FLAGS OCTET REPR
   ====== ======= ============== ==========
   OPEN   0x1     0x0-0x7        0x10-0x17
-  DATA   0x2     0x1-0x2        0x20-0x22
+  DATA   0x2     0x1-0x3        0x20-0x22
   SIGNAL 0x3     0x0-0x1        0x30-0x31
 
 Note: clients may never send nulled addresses to the server. Doing so will
@@ -216,7 +216,7 @@ Valid priority levels: 0x1, 0x2, 0x3
            |      |      |          |   |
            |      |      |          |   +- FLAG: 0x1, Priority 1
            |      |      |          |
-           |      |      |          +- OP CODE 0x03, DATA
+           |      |      |          +- OP CODE 0x2, DATA
            |      |      |
            |      |      +- ADDRESS (8 octets) Address of stream to send to
            |      |     
@@ -242,12 +242,12 @@ closed and must be re-opened before further actions can be performed.
 
 Additional information can be sent in the payload.
 
-  HEADER: 0x0020 0x0000 0x00112233 0x4 0x1
+  HEADER: 0x0020 0x0000 0x00112233 0x3 0x1
            ^      ^      ^          ^   ^   
            |      |      |          |   |
            |      |      |          |   +- FLAG: 0x1 Custom signal
            |      |      |          |
-           |      |      |          +- OP CODE 0x4, SIGNAL
+           |      |      |          +- OP CODE 0x3, SIGNAL
            |      |      |
            |      |      +- ADDRESS (8 octets) Address of stream to send to
            |      |     
@@ -260,11 +260,11 @@ Additional information can be sent in the payload.
 Op codes (OP CODE) received by clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SIGNAL    OP CODE ACCEPTED FLAGS OCTET REPR
-======    ======= ============== ==========
-OPEN      0x1     0x0-0x7        0x10-0x17
-DATA      0x2     0x0-0x2        0x20-0x22
-SIGNAL    0x3     0x0-0xf        0x30-0x3f
+SIGNAL    OP CODE ACCEPTED FLAGS
+======    ======= ==============
+OPEN      0x1     0x0-0x7       
+DATA      0x2     0x0-0x2       
+SIGNAL    0x3     0x0-0xF       
 
 OPEN  (0x1)
 ^^^^^^^^^^^
@@ -303,12 +303,12 @@ DNS lookup).
 
 Responses marked with an asterisk (*) denote that the stream was NOT opened.
 
-  HEADER: 0x0012 0x00 0x00112233 0x1 0x3
+  HEADER: 0x0012 0x00 0x00112233 0x1 0x0
            ^      ^    ^          ^   ^   
            |      |    |          |   |
            |      |    |          |   +- FLAG: 0x0 SUCCESS
            |      |    |          |
-           |      |    |          +- OP CODE 0x1, OPEN_RESPONSE
+           |      |    |          +- OP CODE 0x1, OPEN
            |      |    |
            |      |    +- ADDRESS (4 octets) Address as was sent in the
            |      |       open request
@@ -317,7 +317,7 @@ Responses marked with an asterisk (*) denote that the stream was NOT opened.
            |
            +- TOTAL LENGTH: 12 octets
 
-  CONTENT SPACE: Null, actual address (4 octets) in redredicts or error message
+  CONTENT SPACE: Null, actual address (4 octets) in redredicts or error messages
 
 
 DATA (0x2)
@@ -353,17 +353,17 @@ The following flags can be sent by the server:
     ==== ======         =======
     0x0  EMIT           Emit a custom signal
   * 0x1  END            Close stream
-    0x5  N/A             *unused*
-    0x6  N/A             *unused*
-    0x7  N/A             *unused*
-    0x8  N/A             *unused*
-    0x9  N/A             *unused*
-  * 0xa  ERR_PROTOCOL   Client sent ill-formatted data
-  * 0xb  ERR_OPERATION  Operation Error
-  * 0xc  ERR_LIMIT      Limit reached (messages/second, message size etc)
-  * 0xd  ERR_SERVER     Internal server error
-  * 0xe  ERR_VIOLATION  A violation has occurred
-  * 0xf  ERR_OTHER      Other error
+    0x5  N/A            *unused*
+    0x6  N/A            *unused*
+    0x7  N/A            *unused*
+    0x8  N/A            *unused*
+    0x9  N/A            *unused*
+  * 0xA  ERR_PROTOCOL   Client sent ill-formatted data
+  * 0xB  ERR_OPERATION  Operation Error
+  * 0xC  ERR_LIMIT      Limit reached (messages/second, message size etc)
+  * 0xD  ERR_SERVER     Internal server error
+  * 0xE  ERR_VIOLATION  A violation has occurred
+  * 0xF  ERR_OTHER      Other error
 
 When a flag marked with an asterisk (*) in the table above is received, the
 target stream will be closed.
@@ -371,12 +371,12 @@ target stream will be closed.
 If the address of the packet is nulled, all streams on the target zone will be
 affected by the signal.
 
-  HEADER: 0x0020 0x00 0x00112233 0x4 0x4
+  HEADER: 0x0020 0x00 0x00112233 0x3 0x1
            ^      ^    ^          ^   ^   
            |      |    |          |   |
            |      |    |          |   +- FLAG: 0x1 Custom signal
            |      |    |          |
-           |      |    |          +- OP CODE 0x04, SIGNAL
+           |      |    |          +- OP CODE 0x03, SIGNAL
            |      |    |
            |      |    +- ADDRESS (8 octets) Address of stream to close
            |      |   
