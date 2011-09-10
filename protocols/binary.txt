@@ -163,16 +163,16 @@ result in the connection being closed.
 OPEN (0x1)
 ^^^^^^^^^^
 
-Attempts to open a connection to a stream in a specific `mode`.
+Attempts to open a connection to a channel in a specific `mode`.
 The `CONTENT SPACE` can be used to attach a `token` to the open request.
 
-The flag-nibble is used to determine the mode in which to open the stream:
+The flag-nibble is used to determine the mode in which to open the channel:
 
   FLAG TERM   MEANING
   ==== ====== =======
-  0x0  LISTEN Stream will receive signals
-  0x1  READ   Stream will receive data
-  0x2  WRITE  Stream should be writable
+  0x0  LISTEN Channel will receive signals
+  0x1  READ   Channel will receive data
+  0x2  WRITE  Channel should be writable
   0x4  EMIT   Can send signals
 
 Flags can be combined by means of addition resulting in the following
@@ -194,7 +194,7 @@ Example:
            |      |      |          |
            |      |      |          +- OP CODE 0x1, OPEN
            |      |      |
-           |      |      +- ADDRESS (8 octets) Address of stream to open
+           |      |      +- ADDRESS (8 octets) Address of channel to open
            |      |     
            |      +- RESERVED (unused in example)
            |
@@ -237,7 +237,7 @@ code sent in the flab-nibble. Clients can send signals in the range 0x00-0x01.
    0x0  EMIT   Emit a custom signal
  * 0x1  END    Close stream
 
-When the server receives a signal with the `END`-flag, the stream will be
+When the server receives a signal with the `END`-flag, the channel will be
 closed and must be re-opened before further actions can be performed.
 
 Additional information can be sent in the payload.
@@ -249,7 +249,7 @@ Additional information can be sent in the payload.
            |      |      |          |
            |      |      |          +- OP CODE 0x3, SIGNAL
            |      |      |
-           |      |      +- ADDRESS (8 octets) Address of stream to send to
+           |      |      +- ADDRESS (8 octets) Address of channel to send to
            |      |     
            |      +- RESERVED (unused in example)
            |
@@ -292,7 +292,7 @@ DNS lookup).
     0x5  *unused*
     0x6  *unused*
     0x6  *unused*
-  * 0x8  FAIL_NA           Stream is not available
+  * 0x8  FAIL_NA           Channel is not available
   * 0x9  FAIL_MODE         Mode not allowed
   * 0xa  FAIL_PROTOCOL     Protocol not allowed
   * 0xb  FAIL_HOST         Hostname not allowed
@@ -332,7 +332,7 @@ Data received (see `DATA` in the section `Op codes sent by clients`).
            |      |    |          |
            |      |    |          +- OP CODE 0x03, DATA
            |      |    |
-           |      |    +- ADDRESS (8 octets) Address of stream that data was
+           |      |    +- ADDRESS (8 octets) Address of channel that data was
            |      |       sent to.
            |      |   
            |      +- RESERVED (1 octet, unused in example)
@@ -352,7 +352,7 @@ The following flags can be sent by the server:
     FLAG TERM           MEANING
     ==== ======         =======
     0x0  EMIT           Emit a custom signal
-  * 0x1  END            Close stream
+  * 0x1  END            Close channel
     0x5  N/A            *unused*
     0x6  N/A            *unused*
     0x7  N/A            *unused*
@@ -366,9 +366,9 @@ The following flags can be sent by the server:
   * 0xF  ERR_OTHER      Other error
 
 When a flag marked with an asterisk (*) in the table above is received, the
-target stream will be closed.
+target channel will be closed.
 
-If the address of the packet is nulled, all streams on the target zone will be
+If the address of the packet is nulled, all channels on the target zone will be
 affected by the signal.
 
   HEADER: 0x0020 0x00 0x00112233 0x3 0x1
@@ -378,7 +378,7 @@ affected by the signal.
            |      |    |          |
            |      |    |          +- OP CODE 0x03, SIGNAL
            |      |    |
-           |      |    +- ADDRESS (8 octets) Address of stream to close
+           |      |    +- ADDRESS (8 octets) Address of channel to close
            |      |   
            |      +- RESERVED (unused in example)
            |
