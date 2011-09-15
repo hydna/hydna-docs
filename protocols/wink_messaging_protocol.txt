@@ -27,6 +27,47 @@ Response from server:
   Upgrade: winsock/1
 
 
+2.1. Handshake URI
+
+
+[http://][<auth>@] <host> [ : <port> ] [ / <channel> ] [ ? <token> ]
+
+Host:
+	Fully qualified domain name of remote entity serving intended zone. The host
+	must not exeed 256 bytes.
+
+Port:
+	Port on which remote server is accepting connections. Defaults to port 80.
+
+Channel:
+	Id of the channel specified in base-10 (must be < 4294967295). If the id
+	is prefixed with an `x`, the channel should be interpreted as base-16 (must be
+	< FFFFFFFF). Defaults to channel 1.
+
+Token:
+	Token that should be sent to the server along with an open-request. Default to
+	empty string.
+
+
+Examples:
+
+livetorget.hydna.net/13145
+\__________________/ \___/
+       |               |
+      host            addr
+
+sweet.hydna.net/13145?password
+\_____________/ \___/ \______/
+       |          |      |
+      host       addr  token
+
+beans.hydna.net:8080/13145?password
+\_____________/ \__/ \___/ \_____/
+       |         |     |      |
+      host      port  addr  token
+
+
+
 
 3.1 Transport Layers
 
