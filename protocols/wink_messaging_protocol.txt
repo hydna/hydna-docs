@@ -141,10 +141,13 @@ additional flags that carry multiple values:
 
 Flags:
 
-    0x0: Open channel in listening mode
-    0x1: Open Channel in read-only mode
-    0x2: Open channel in write-only mode
-    0x4: Open channel in emit mode
+    0x0: ALLOW, the channel open request was allowed, channel is open.
+    0x1: REDIRECT, the channel open request was allowed, but was 
+         redirected to an other channel. New channel in `payload`.
+    0x2-0x6: Currently unused. Channel was not opened. Client SHOULD
+         respond with a NOT_ALLOWED error.
+    0x7: DENY, the channel open request was denied. See reason in
+         payload.
 
 
 
