@@ -25,9 +25,14 @@ Response from server:
 
   HTTP/1.1 Switching Protocol
   Upgrade: winsock/1
+  
+  
+2.1 Special headers
+
+  X-Follow-Redirects: no
 
 
-2.1. Handshake URI
+2.2. Handshake URI
 
 
 [http://][<auth>@] <host> [ : <port> ] [ / <channel> ] [ ? <token> ]
